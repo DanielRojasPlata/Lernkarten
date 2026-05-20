@@ -23,12 +23,12 @@
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; overflow-x: hidden; }
-    body { font-family: 'Inter', system-ui, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: var(--text-main); display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 100dvh; padding: 15px; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
-    header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; padding: 5px 0 10px 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: var(--text-main); display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 100dvh; padding: 15px; padding-bottom: max(50px, env(safe-area-inset-bottom)); }
+    header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; margin-bottom: 20px; }
     h1 { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
     .btn-add { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 6px 12px; font-size: 0.9rem; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px); }
     .btn-add:hover { background-color: rgba(59, 130, 246, 0.2); color: white; border-color: rgba(59, 130, 246, 0.5); }
-    .main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; max-width: 450px; gap: 15px; margin-bottom: 15px; }
+    .main-content { flex: 1; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; width: 100%; max-width: 450px; gap: 15px; margin-bottom: 15px; }
     .card { width: 100%; height: 200px; perspective: 1000px; cursor: pointer; }
     .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
     .card.flipped .card-inner { transform: rotateY(180deg); }
@@ -63,7 +63,7 @@
 <body>
   <header><h1 style="cursor: pointer; transition: color 0.2s;" onclick="openCredits()" onmouseover="this.style.color='#60a5fa'" onmouseout="this.style.color='#e2e8f0'" title="Credits">Lernkarten</h1><button onclick="addCard()" class="btn-add">+ Hinzufügen</button></header>
   <div class="main-content">
-    <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: -15px; z-index: 5;">
+    <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: 5px; z-index: 5;">
       <button id="edit-btn" onclick="editCard()" style="display: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer; backdrop-filter: blur(4px); color: #e2e8f0; align-items: center; gap: 6px;" title="Bearbeiten">✏️ Bearbeiten</button>
     </div>
     <div class="card" style="position: relative;">
@@ -244,10 +244,18 @@
         let response = await fetch(url);
         let corrected = await response.text();
         
+        if (corrected.includes("ENOSPC") || !response.ok) {
+          throw new Error("Server overloaded");
+        }
+        
         document.getElementById('uben-correct-text').innerText = corrected.trim();
         document.getElementById('uben-result').style.display = 'block';
       } catch(e) {
-        document.getElementById('uben-correct-text').innerText = "Error de conexión. Revisa tu internet para usar esta función.";
+        if (e.message === "Server overloaded") {
+          document.getElementById('uben-correct-text').innerText = "El servidor de IA gratuito está saturado en este momento. Intenta de nuevo más tarde.";
+        } else {
+          document.getElementById('uben-correct-text').innerText = "Error de conexión. Revisa tu internet para usar esta función.";
+        }
         document.getElementById('uben-result').style.display = 'block';
         input.disabled = false;
         btn.disabled = false;
