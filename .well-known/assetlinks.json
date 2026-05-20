@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.danielrojasplata.twa",
+        "sha256_cert_fingerprints": ["74:EB:6C:E7:EF:A7:80:2F:EE:F0:ED:C5:08:A1:57:F2:70:92:50:81:72:2F:C0:3D:67:93:6E:79:C5:3C:01:4D"]
+      }
+    }]
