@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flashcards Alemán</title>
+  
+  <!-- Configuración PWA para Android -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
+  <link rel="apple-touch-icon" href="icon.svg">
+  
+  <style>
+    :root { 
+      --bg-color: #0f172a; 
+      --card-bg: rgba(255, 255, 255, 0.05); 
+      --text-main: #f8fafc; 
+      --text-muted: #94a3b8; 
+      --primary: #3b82f6; 
+      --primary-hover: #2563eb; 
+      --secondary: #475569; 
+      --secondary-hover: #334155; 
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); color: var(--text-main); display: flex; flex-direction: column; align-items: center; justify-content: space-between; min-height: 100vh; padding: 20px; }
+    header { width: 100%; max-width: 450px; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+    h1 { font-size: 1.2rem; font-weight: 600; color: #e2e8f0; }
+    .btn-add { background-color: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); padding: 6px 12px; font-size: 0.9rem; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(8px); }
+    .btn-add:hover { background-color: rgba(59, 130, 246, 0.2); color: white; border-color: rgba(59, 130, 246, 0.5); }
+    .main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; max-width: 450px; gap: 24px; }
+    .card { width: 100%; height: 220px; perspective: 1000px; cursor: pointer; }
+    .card-inner { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .card.flipped .card-inner { transform: rotateY(180deg); }
+    .card-front, .card-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; background: var(--card-bg); border-radius: 20px; padding: 24px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); text-align: center; color: var(--text-main); }
+    .card-back { transform: rotateY(180deg); color: #60a5fa; background: rgba(255, 255, 255, 0.08); }
+    .word-text { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.02em; }
+    .hint-text { font-size: 0.8rem; color: var(--text-muted); margin-top: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .tools-container { display: flex; gap: 10px; margin-top: 10px; }
+    .audio-btn { background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); color: #93c5fd; padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px); }
+    .audio-btn:hover { background: rgba(59, 130, 246, 0.25); color: #bfdbfe; }
+    .edit-btn { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: #e2e8f0; }
+    .edit-btn:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+    .example-container { width: 100%; min-height: 80px; display: flex; justify-content: center; align-items: center; padding: 16px; background: rgba(59, 130, 246, 0.05); backdrop-filter: blur(8px); border-radius: 16px; border: 1px solid rgba(59, 130, 246, 0.4); box-shadow: 0 0 15px rgba(59, 130, 246, 0.15); }
+    .example { font-style: italic; font-size: 1.1rem; color: #cbd5e1; text-align: center; line-height: 1.4; }
+    .example b { color: #60a5fa; background-color: rgba(96, 165, 250, 0.15); padding: 2px 6px; border-radius: 6px; font-weight: 600; }
+    .uben-btn { width: 100%; padding: 12px; margin-top: 5px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.2); color: #e2e8f0; border-radius: 16px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .uben-btn:hover { background: rgba(255,255,255,0.1); }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
+    .modal-content { background: #1e293b; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; width: 100%; max-width: 550px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); display: flex; flex-direction: column; }
+    #uben-input { width: 100%; min-height: 120px; background: #0f172a; border: 1px solid #334155; border-radius: 12px; color: #f8fafc; padding: 14px; font-family: inherit; font-size: 1rem; resize: none; outline: none; margin-bottom: 15px; }
+    #uben-input:focus { border-color: #3b82f6; }
+    #korrigieren-btn { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: all 0.2s; }
+    #korrigieren-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
+    .footer-controls { width: 100%; max-width: 450px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    button.control-btn { padding: 14px; font-size: 1rem; font-weight: 600; border: none; border-radius: 16px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+    .btn-secondary { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(8px); color: #e2e8f0; }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+    .btn-primary { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); color: white; border: 1px solid rgba(59, 130, 246, 0.4); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4); }
+  </style>
+</head>
+<body>
+  <header><h1 style="cursor: pointer; transition: color 0.2s;" onclick="openCredits()" onmouseover="this.style.color='#60a5fa'" onmouseout="this.style.color='#e2e8f0'" title="Credits">Lernkarten</h1><button onclick="addCard()" class="btn-add">+ Hinzufügen</button></header>
+  <div class="main-content">
+    <div style="width: 100%; display: flex; justify-content: flex-end; margin-bottom: -15px; z-index: 5;">
+      <button id="edit-btn" onclick="editCard()" style="display: none; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer; backdrop-filter: blur(4px); color: #e2e8f0; align-items: center; gap: 6px;" title="Bearbeiten">✏️ Bearbeiten</button>
+    </div>
+    <div class="card" style="position: relative;">
+      <div class="card-inner">
+        <div class="card-front" onclick="this.parentNode.parentNode.classList.toggle('flipped')"><div id="card-front-content"></div></div>
+        <div class="card-back" onclick="this.parentNode.parentNode.classList.toggle('flipped')"><div id="card-back-content"></div></div>
+      </div>
+    </div>
+    <button class="uben-btn" onclick="openUben()"><img src="uben-icon.png" alt="icon" style="width: 24px; height: 24px; border-radius: 4px;"> Üben</button>
+    <div id="example-container" style="visibility: hidden;" class="example-container">
+      <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%;">
+        <div class="example" id="example"></div>
+        <button id="speak-btn" class="audio-btn" style="display: none;" onclick="speakCurrentWord()">🔊 Anhören</button>
+      </div>
+    </div>
+  </div>
+  <div class="footer-controls">
+    <button id="example-button" onclick="toggleExample()" class="control-btn btn-secondary">Beispiel ansehen</button>
+    <button onclick="nextCard()" class="control-btn btn-primary">Nächste</button>
+  </div>
+  <!-- Modal Credits -->
+  <div id="credits-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 300px; text-align: center; padding: 30px;">
+      <h2 style="color: var(--text-main); margin-bottom: 20px; font-size: 1.5rem;">Credits</h2>
+      <p style="color: var(--text-muted); font-size: 1.1rem; margin-bottom: 10px;">Daniel Rojas Plata</p>
+      <a href="https://www.danielrojasplata.com" target="_blank" style="color: #60a5fa; text-decoration: none; font-size: 1.05rem; margin-bottom: 25px; display: inline-block;">www.danielrojasplata.com</a>
+      <button onclick="closeCredits()" style="background: transparent; border: 1px solid #475569; color: #cbd5e1; width: 100%; padding: 10px; border-radius: 12px; cursor: pointer;">Schließen</button>
+    </div>
+  </div>
+
+  <!-- Modal Üben -->
+  <div id="uben-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h2 id="uben-title" style="color: var(--text-main); margin-bottom: 10px;">Üben</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Schreibe einen deutschen Satz mit diesem Wort.</p>
+      <textarea id="uben-input" lang="de" spellcheck="true" placeholder="Escribe tu frase aquí..."></textarea>
+      <button id="korrigieren-btn" onclick="korrigieren()">Korrigieren <span style="font-size: 0.75rem; font-weight: normal; display: block; margin-top: 2px;">(Benötigt Internetverbindung)</span></button>
+      <div id="uben-result" style="display: none; margin-top: 15px; text-align: left; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+         <div id="uben-correct-text" style="color: #fef08a; font-weight: 500; font-size: 1.1rem;"></div>
+      </div>
+      <button onclick="closeUben()" style="margin-top: 15px; background: transparent; border: 1px solid #475569; color: #cbd5e1; width: 100%; padding: 10px; border-radius: 12px; cursor: pointer;">Schließen</button>
+    </div>
+  </div>
+
+  <script src="defaultCards.js"></script>
+  <script>
+    let userCards = JSON.parse(localStorage.getItem("flashcards_user")) || [];
+    let editedCards = JSON.parse(localStorage.getItem("flashcards_edited")) || {};
+    
+    // Unir tarjetas y añadir id interno
+    let cards = [...defaultCards, ...userCards].map((c, i) => {
+      let modified = editedCards[i] ? { ...c, ...editedCards[i] } : c;
+      modified._id = i;
+      return modified;
+    });
+
+    let currentCard = null; let germanVoice = null;
+    let shuffledIndices = [];
+    let currentDeckIndex = 0;
+
+    function loadVoices() { if ('speechSynthesis' in window) { const voices = window.speechSynthesis.getVoices(); germanVoice = voices.find(v => v.lang.startsWith('de')) || voices[0]; } }
+    if ('speechSynthesis' in window) { window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
+    function saveCards() { localStorage.setItem("flashcards_user", JSON.stringify(userCards)); }
+    
+    function getRandomCard() { 
+      if (cards.length === 0) return { front: "Vacío", back: "Vacío", example: "" }; 
+      if (shuffledIndices.length !== cards.length || currentDeckIndex >= shuffledIndices.length) {
+        // Barajar las tarjetas usando el algoritmo Fisher-Yates
+        shuffledIndices = cards.map((_, i) => i);
+        for (let i = shuffledIndices.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [shuffledIndices[i], shuffledIndices[j]] = [shuffledIndices[j], shuffledIndices[i]];
+        }
+        currentDeckIndex = 0;
+      }
+      return cards[shuffledIndices[currentDeckIndex++]]; 
+    }
+    function showCard(cardData) {
+      currentCard = cardData;
+      document.getElementById('card-front-content').innerHTML = "<div class='word-text'>" + cardData.front + "</div>";
+      document.getElementById('card-back-content').innerHTML = "<div class='word-text'>" + cardData.back + "</div>";
+      document.getElementById('example').innerHTML = cardData.example || "Sin ejemplo.";
+      document.querySelector('.card').classList.remove('flipped');
+      document.getElementById('example-button').style.opacity = '1'; document.getElementById('example-button').disabled = false;
+      document.getElementById('example-container').style.visibility = 'hidden';
+      document.getElementById('speak-btn').style.display = 'none';
+      document.getElementById('edit-btn').style.display = 'flex';
+    }
+    function speakCurrentWord() {
+      if (!('speechSynthesis' in window) || !currentCard || !currentCard.example) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(document.getElementById('example').innerText);
+      if (germanVoice) u.voice = germanVoice;
+      u.lang = 'de-DE'; u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    }
+    function toggleExample() {
+      document.getElementById('example-button').style.opacity = '0.5'; document.getElementById('example-button').disabled = true;
+      document.getElementById('example-container').style.visibility = 'visible';
+      if ('speechSynthesis' in window && currentCard && currentCard.example) {
+        document.getElementById('speak-btn').style.display = 'flex';
+      }
+    }
+    function editCard() {
+      if (!currentCard) return;
+      const newFront = prompt("Palabra (frontal):", currentCard.front);
+      if (newFront === null) return;
+      const newBack = prompt("Traducción:", currentCard.back);
+      if (newBack === null) return;
+      const newExample = prompt("Ejemplo (puedes usar <b>...</b>):", currentCard.example);
+      if (newExample === null) return;
+
+      currentCard.front = newFront;
+      currentCard.back = newBack;
+      currentCard.example = newExample;
+      
+      let idx = currentCard._id;
+      cards[idx] = currentCard; // Actualizar en memoria
+      
+      if (idx >= defaultCards.length) {
+        // Es una tarjeta creada por el usuario
+        userCards[idx - defaultCards.length] = currentCard;
+        saveCards();
+      } else {
+        // Es una tarjeta base modificada
+        editedCards[idx] = currentCard;
+        localStorage.setItem("flashcards_edited", JSON.stringify(editedCards));
+      }
+      showCard(currentCard); // Refrescar vista
+    }
+
+    function addCard() {
+      const f = prompt("Palabra (frontal):"); const b = prompt("Traducción:");
+      if(f && b) { 
+        let newCard = {front: f, back: b, example: "", lang: "de", _id: cards.length};
+        userCards.push(newCard); 
+        cards.push(newCard); 
+        shuffledIndices = []; 
+        saveCards(); 
+        nextCard(); 
+      }
+    }
+    function nextCard() { showCard(getRandomCard()); }
+    showCard(getRandomCard());
+
+    function openUben() {
+      document.getElementById('uben-title').innerText = currentCard.front.replace(/<[^>]+>/g, '');
+      document.getElementById('uben-input').value = '';
+      document.getElementById('uben-input').disabled = false;
+      document.getElementById('uben-result').style.display = 'none';
+      document.getElementById('uben-modal').style.display = 'flex';
+      document.getElementById('korrigieren-btn').disabled = false;
+      document.getElementById('korrigieren-btn').innerHTML = 'Korrigieren <span style="font-size: 0.75rem; font-weight: normal; display: block; margin-top: 2px;">(Benötigt Internetverbindung)</span>';
+      setTimeout(() => document.getElementById('uben-input').focus(), 100);
+    }
+    function closeUben() {
+      document.getElementById('uben-modal').style.display = 'none';
+    }
+    function openCredits() {
+      document.getElementById('credits-modal').style.display = 'flex';
+    }
+    function closeCredits() {
+      document.getElementById('credits-modal').style.display = 'none';
+    }
+    async function korrigieren() {
+      const input = document.getElementById('uben-input');
+      const text = input.value.trim();
+      if (!text) return;
+      
+      const btn = document.getElementById('korrigieren-btn');
+      input.disabled = true; // Fijar el texto del usuario
+      btn.disabled = true;
+      btn.innerHTML = 'Corrigiendo... <span style="font-size: 0.75rem; font-weight: normal; display: block; margin-top: 2px;">(Bitte warten)</span>';
+      
+      try {
+        const promptText = "Korrigiere diesen deutschen Satz grammatikalisch. Gib NUR den korrigierten Satz zurück, ohne Erklärungen, ohne Anführungszeichen: " + text;
+        const url = "https://text.pollinations.ai/" + encodeURIComponent(promptText);
+        let response = await fetch(url);
+        let corrected = await response.text();
+        
+        document.getElementById('uben-correct-text').innerText = corrected.trim();
+        document.getElementById('uben-result').style.display = 'block';
+      } catch(e) {
+        document.getElementById('uben-correct-text').innerText = "Error de conexión. Revisa tu internet para usar esta función.";
+        document.getElementById('uben-result').style.display = 'block';
+        input.disabled = false;
+        btn.disabled = false;
+      }
+      btn.innerHTML = 'Korrigieren <span style="font-size: 0.75rem; font-weight: normal; display: block; margin-top: 2px;">(Benötigt Internetverbindung)</span>';
+    }
+
+    // Registro del Service Worker para PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker registrado', reg))
+          .catch(err => console.error('Error al registrar Service Worker', err));
+      });
+    }
+  </script>
+</body>
+</html>
