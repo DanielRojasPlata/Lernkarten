@@ -1,13 +1,17 @@
-const CACHE_NAME = 'lernkarten-v1';
+const CACHE_NAME = 'lernkarten-v2';
 const urlsToCache = [
-  './Appli (1).html',
+  './',
+  './index.html',
   './manifest.json',
   './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './uben-icon.png',
   './defaultCards.js'
 ];
 
-// Instalar el Service Worker y almacenar recursos en caché
 self.addEventListener('install', event => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
@@ -16,12 +20,21 @@ self.addEventListener('install', event => {
   );
 });
 
-// Interceptar peticiones para que la app funcione offline
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
+          .map(cacheName => caches.delete(cacheName))
+      );
+    }).then(() => self.clients.claim())
+  );
+});
+
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Devuelve el recurso en caché si existe, sino lo descarga
         return response || fetch(event.request);
       })
   );
