@@ -1,9 +1,9 @@
 {
-  "id": "/",
-  "name": "Lernkarten Alemán",
+  "name": "Lernkarten",
   "short_name": "Lernkarten",
-  "description": "Aplicación minimalista y sin conexión para practicar vocabulario avanzado en alemán con integración de IA.",
-  "start_url": "./index.html",
+  "description": "Alemán avanzado.",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0f172a",
@@ -20,12 +20,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
-    },
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
     }
   ]
 }
